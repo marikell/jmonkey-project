@@ -38,7 +38,7 @@ import java.util.Set;
  * Move your Logic into AppStates or Controls
  * @author normenhansen
  */
-public class Main extends SimpleApplication implements AnimEventListener, PhysicsCollisionListener {
+public class Main extends SimpleApplication implements AnimEventListener, PhysicsCollisionListener, ActionListener {
     
     private float posX = 0f;
     private float posY = 0f;
@@ -51,8 +51,10 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     
     private BulletAppState bulletAppState;
     
-    private Node playerA;
-    private Node playerB;
+    private Ninja playerA;
+    private Ninja playerB;
+    
+    private Ninja NinjaKey;
     
     private int playerACollider = 0;
     private int playerBCollider = 0;
@@ -69,85 +71,57 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
         stateManager.attach(bulletAppState);
         bulletAppState.setDebugEnabled(true);
         bulletAppState.getPhysicsSpace().addCollisionListener(this);
-
-
-    }
-
-    @Override
-    public void simpleInitApp() {
-        initBulletAppState();
-        createLight(ColorRGBA.Gray);
-        playerA = createNinja("ninja1", posX+150, posY, posZ, false, this);
-        playerB = createNinja("ninja2", posX-150, posY, posZ, true, this);
-    }
-
-    private Node createNinja(String name, float posX, float posY, float posZ, boolean leftSide, Main listener){
-        //Node ninja = (Node)assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
-        Ninja ninja = new Ninja(name,posX,posY,posZ);
-        ninja.Initialize(assetManager.loadModel("Models/Ninja/Ninja.mesh.xml"));
-        //ninja.setLocalTranslation(posX, posY, posZ);
-       //ninja.setName(name);
-        //ninja.scale(0.025f);
-        
-        if (leftSide) {
-            rotateNinja(ninja,0f,rotateSide,0f);
-        } else {
-            rotateNinja(ninja,0f,-rotateSide,0f);
-        }
-        animateNinja(ninja, listener);
-        
-        rootNode.attachChild(ninja);
-        //colisionNinja(ninja);
-        return ninja;
     }
     
-    private DirectionalLight createLight(ColorRGBA color){
+     private DirectionalLight createLight(ColorRGBA color){
         viewPort.setBackgroundColor(color);
         DirectionalLight light = new DirectionalLight();
         light.setDirection(new Vector3f(-0.1f,-1f,-1).normalizeLocal());
         rootNode.addLight(light);
         return light;
     }
-    
-    private void rotateNinja(Node ninja, float dgX, float dgY, float dgZ) {
-        ninja.rotate(dgX, dgY, dgZ);
+
+    @Override
+    public void simpleInitApp() {
+        initBulletAppState();
+        createLight(ColorRGBA.Gray);
+        createKeys();
+        NinjaKey = createNinja("ninjaKey",posX,posY,posZ,new Vector3f(0,0,0),this);
+        //playerA = createNinja("ninja1", posX+150, posY, posZ,new Vector3f(0,-80f,0) ,this);
+        //playerB = createNinja("ninja2", posX-150, posY, posZ,new Vector3f(0,80f,0), this);
     }
     
-    private void animateNinja(Node ninja, Main listener) {
-        control = ninja.getControl(AnimControl.class);
-        control.addListener(listener);
-        channel = control.createChannel();
-        channel.setAnim("Walk", 0.005f);
+    public void createKeys(){
+        inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_0));
+        inputManager.addMapping("Left",new KeyTrigger(KeyInput.KEY_Q));
+        inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
+        inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_S));
     }
-    
-    private void colisionNinja(Node ninja) {
-        //CollisionShape collisionShape = new ;
-       // RigidBodyControl boxPhysicsNode = new RigidBodyControl(collisionShape);
-        //boxPhysicsNode.setMass(0);
+
+    private Ninja createNinja(String name, float posX, float posY, float posZ,Vector3f rotation,Main listener){
+      
+        Ninja ninja = new Ninja(name, new Vector3f(posX,posY,posZ),rotation,bulletAppState, "Models/Ninja/Ninja.mesh.xml", assetManager);
+       
+        //Já inicializa uma animação
+        //ninja.animationListener(listener, "Walk", 0.02f);
         
-        //ninja.addControl(boxPhysicsNode);
-        //bulletAppState.getPhysicsSpace().add(boxPhysicsNode);
+        rootNode.attachChild(ninja);
+        return ninja;
     }
+    
+
     
     @Override
     public void simpleUpdate(float tpf) {
-        if(!colision(playerA)){
-            ninjaWalk(playerA, -0.01f);
-            colisionNinja(playerA);
+        /*if(!colision(playerA)){
+            playerA.move(-0.01f,0,0);
         }
         if(!colision(playerB)){
-            ninjaWalk(playerB, 0.01f);
-            colisionNinja(playerB);
-        }
+            playerB.move(0.01f,0,0);
+        }*/
     }
     
-    private void ninjaWalk(Node ninja, float updateWalk) {        
-       
-        ninja.move(updateWalk, 0, 0);                
-    }
-    
-    
-
+   
     @Override
     public void simpleRender(RenderManager rm) {
         //TODO: add render code
@@ -155,32 +129,11 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
 
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-       ninjaAnimation(control, channel, animName, playerA);
-       ninjaAnimation(control, channel, animName, playerB);
+        /*if(colision(playerA)){
+         playerA.animate("Walk", "Attack3", 0.0f, LoopMode.DontLoop, 1f);
+        } */      
     }
-    
-    public void ninjaAnimation(AnimControl control, AnimChannel channel, String animName,Node player){
-         if (animName.equals("Walk") && colision(player)) {
-            channel.setAnim("Attack3", 0.0f);
-            channel.setLoopMode(LoopMode.DontLoop);
-            channel.setSpeed(1f);
-            channel.setAnim("Attack1",0.0f);
-            channel.setLoopMode(LoopMode.Loop);
-            channel.setSpeed(1f);
-             
-            
-        }
-         
-       /* if (animName.equals("Attack3") && colision()) {
-            channel.setAnim("Death1", 0.0f);
-            channel.setLoopMode(LoopMode.DontLoop);
-            channel.setSpeed(1f);
-        } */
-
-        if (animName.equals("Death1") && !isAlive(player)) {
-            rootNode.detachChild(player);
-        }
-    }
+   
     
     private boolean colision(Node ninja){
      return false;   
@@ -194,11 +147,11 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
      //   throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+       
     @Override
     public void collision(PhysicsCollisionEvent event) {
         
-        if(event.getNodeA().getName().equals("ninja1")){
+        /*if(event.getNodeA().getName().equals("ninja1")){
             playerACollider++;
             System.out.println("NINJA1");
             
@@ -206,7 +159,32 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
         else if(event.getNodeB().getName().equals("ninja2")){
             playerBCollider++;
             System.out.println("NINJA2");
+        }*/
+        
+    }
+
+    @Override
+    public void onAction(String name, boolean isPressed, float tpf) {
+
+        if(name.equals("Right")){
+            NinjaKey.move(0.01f,0,0);
+            System.out.println("right");
+
         }
+        else if(name.equals("Left")){
+        NinjaKey.move(-0.01f,0,0);
+        //ninjaWalk(playerA, -0.01f);
+         System.out.println("left");
+
+
+        }
+       /* else if(name.equals(""))
+        {
+            
+        }
+        else if(name.equals("")){
+            
+        }*/
         
     }
 }
