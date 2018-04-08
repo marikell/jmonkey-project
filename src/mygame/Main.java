@@ -28,6 +28,10 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
+import entidades.Ninja;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This is the Main Class of your Game. You should only do initialization here.
@@ -38,10 +42,10 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     
     private float posX = 0f;
     private float posY = 0f;
-    private float posZ = -10f;
+    private float posZ = -600f;
     
     private float rotateSide = 80f;
-    
+        
     private AnimChannel channel;
     private AnimControl control;
     
@@ -53,6 +57,8 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     private int playerACollider = 0;
     private int playerBCollider = 0;
 
+    private int lose = 10;
+    
     public static void main(String[] args) {
         Main app = new Main();
         app.start();
@@ -71,15 +77,17 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     public void simpleInitApp() {
         initBulletAppState();
         createLight(ColorRGBA.Gray);
-        playerA = createNinja("ninja1", posX+10, posY, posZ, false, this);
-        playerB = createNinja("ninja2", posX-10, posY, posZ, true, this);
+        playerA = createNinja("ninja1", posX+150, posY, posZ, false, this);
+        playerB = createNinja("ninja2", posX-150, posY, posZ, true, this);
     }
 
     private Node createNinja(String name, float posX, float posY, float posZ, boolean leftSide, Main listener){
-        Node ninja = (Node)assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
-        ninja.setLocalTranslation(posX, posY, posZ);
-        ninja.setName(name);
-        ninja.scale(0.025f);
+        //Node ninja = (Node)assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
+        Ninja ninja = new Ninja(name,posX,posY,posZ);
+        ninja.Initialize(assetManager.loadModel("Models/Ninja/Ninja.mesh.xml"));
+        //ninja.setLocalTranslation(posX, posY, posZ);
+       //ninja.setName(name);
+        //ninja.scale(0.025f);
         
         if (leftSide) {
             rotateNinja(ninja,0f,rotateSide,0f);
@@ -89,7 +97,7 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
         animateNinja(ninja, listener);
         
         rootNode.attachChild(ninja);
-        colisionNinja(ninja);
+        //colisionNinja(ninja);
         return ninja;
     }
     
@@ -113,24 +121,32 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     }
     
     private void colisionNinja(Node ninja) {
-        CollisionShape collisionShape = CollisionShapeFactory.createMeshShape(ninja);
-        collisionShape.setScale(new Vector3f(0.025f, 0.025f, 0.025f));
-        RigidBodyControl boxPhysicsNode = new RigidBodyControl(collisionShape);
-        boxPhysicsNode.setMass(0);
-        ninja.addControl(boxPhysicsNode);
-        bulletAppState.getPhysicsSpace().add(boxPhysicsNode);
+        //CollisionShape collisionShape = new ;
+       // RigidBodyControl boxPhysicsNode = new RigidBodyControl(collisionShape);
+        //boxPhysicsNode.setMass(0);
+        
+        //ninja.addControl(boxPhysicsNode);
+        //bulletAppState.getPhysicsSpace().add(boxPhysicsNode);
     }
     
     @Override
     public void simpleUpdate(float tpf) {
-        ninjaWalk(playerA, -tpf);
-        ninjaWalk(playerB, tpf);
+        if(!colision(playerA)){
+            ninjaWalk(playerA, -0.01f);
+            colisionNinja(playerA);
+        }
+        if(!colision(playerB)){
+            ninjaWalk(playerB, 0.01f);
+            colisionNinja(playerB);
+        }
     }
     
-    private void ninjaWalk(Node ninja, float tpf) {
-        ninja.move(tpf, 0, 0);
-        
+    private void ninjaWalk(Node ninja, float updateWalk) {        
+       
+        ninja.move(updateWalk, 0, 0);                
     }
+    
+    
 
     @Override
     public void simpleRender(RenderManager rm) {
@@ -148,8 +164,13 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
             channel.setAnim("Attack3", 0.0f);
             channel.setLoopMode(LoopMode.DontLoop);
             channel.setSpeed(1f);
+            channel.setAnim("Attack1",0.0f);
+            channel.setLoopMode(LoopMode.Loop);
+            channel.setSpeed(1f);
+             
+            
         }
-
+         
        /* if (animName.equals("Attack3") && colision()) {
             channel.setAnim("Death1", 0.0f);
             channel.setLoopMode(LoopMode.DontLoop);
