@@ -19,27 +19,45 @@ import com.jme3.scene.Node;
  */
 public class Ninja extends Model{
     
-    public Ninja(String name, Vector3f position, Vector3f rotation, BulletAppState bulletAppState, String mesh, AssetManager assetManager) {
+    private Boolean walkToLeft;
+    private final Vector3f ninjaScale = new Vector3f(0f,0f,0f);
+    
+    public Ninja(String name, Vector3f position, Vector3f rotation, BulletAppState bulletAppState, String mesh, AssetManager assetManager, Boolean walkToLeft) {
         super(name, position, rotation, bulletAppState, mesh, assetManager);
+        this.walkToLeft = walkToLeft;
+
     }
     
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-        
         animate(animName,"Attack3", 0f, LoopMode.DontLoop,1f);
-         
     }
     @Override
     public void animate(String beforeAnimName,String afterAnimName, float time, LoopMode loopMode, float speed){
         
-         if (beforeAnimName.equals("Walk")) {
-            getAnimationChannel().setAnim(afterAnimName, 0.04f);
-            getAnimationChannel().setLoopMode(LoopMode.DontLoop);            
+       if (beforeAnimName.equals("Walk") && isColliding()) {
+            getAnimationChannel().setAnim(afterAnimName, time);
+            getAnimationChannel().setLoopMode(loopMode);            
             
         }
         
     }
     
+    public void automaticWalkWhenIsNotColliding(Vector3f value) throws Exception {
+        if(super.isColliding()) {
+           return; 
+        }
+        
+        if(this.walkToLeft) {
+            value = new Vector3f(-value.x, value.y, value.z);
+        }
+        
+        super.moveModelWithRigidBody(value);
+    }
+    
+    public void startCollider(){
+       startCollider(0,50,50f);
+    }
    
     
     

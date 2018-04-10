@@ -29,9 +29,14 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import entidades.Model;
 import entidades.Ninja;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This is the Main Class of your Game. You should only do initialization here.
@@ -54,11 +59,10 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     private Ninja playerA;
     private Ninja playerB;
     
-    private Ninja NinjaKey;
-    
     private int playerACollider = 0;
     private int playerBCollider = 0;
 
+    private ArrayList<Model> ninjaList;
     private int lose = 10;
     
     public static void main(String[] args) {
@@ -82,13 +86,26 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     }
 
     @Override
-    public void simpleInitApp() {
+    public void simpleInitApp(){
+        ninjaList = new ArrayList<>();
         initBulletAppState();
         createLight(ColorRGBA.Gray);
         createKeys();
-        NinjaKey = createNinja("ninjaKey",posX,posY,posZ,new Vector3f(0,0,0),this);
-        //playerA = createNinja("ninja1", posX+150, posY, posZ,new Vector3f(0,-80f,0) ,this);
-        //playerB = createNinja("ninja2", posX-150, posY, posZ,new Vector3f(0,80f,0), this);
+        playerA = createNinja("ninja1", posX+150, posY, posZ,new Vector3f(0,-80f,0) ,this, true);
+        playerB = createNinja("ninja2", posX-150, posY, posZ,new Vector3f(0,80f,0), this, false);
+        initNinjas();
+    }
+    
+    private void initNinjas(){
+        for (Model next : ninjaList){
+            if(!isNinja(next.getClass())){
+                continue;
+            }
+            Ninja aux = (Ninja) next;
+            aux.initEngine();
+            aux.startAnimation("Walk", 0.005f);
+            aux.startCollider();
+        }
     }
     
     public void createKeys(){
@@ -97,28 +114,30 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
         inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
         inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_S));
     }
+    
+    private Boolean isNinja(Class<?> classType) {
+        return classType.equals(Ninja.class);
+    }
 
-    private Ninja createNinja(String name, float posX, float posY, float posZ,Vector3f rotation,Main listener){
-      
-        Ninja ninja = new Ninja(name, new Vector3f(posX,posY,posZ),rotation,bulletAppState, "Models/Ninja/Ninja.mesh.xml", assetManager);
-       
-        //Já inicializa uma animação
-        //ninja.animationListener(listener, "Walk", 0.02f);
-        
+    private Ninja createNinja(String name, float posX, float posY, float posZ,Vector3f rotation,Main listener, Boolean walkToLeft){
+        Ninja ninja = new Ninja(name, new Vector3f(posX,posY,posZ),rotation, this.bulletAppState, "Models/Ninja/Ninja.mesh.xml", assetManager, walkToLeft);
         rootNode.attachChild(ninja);
+        ninjaList.add(ninja);
         return ninja;
     }
     
-
-    
     @Override
     public void simpleUpdate(float tpf) {
-        /*if(!colision(playerA)){
-            playerA.move(-0.01f,0,0);
+        for (Model next : ninjaList) {
+            if (isNinja(next.getClass())) {
+                Ninja aux = (Ninja)next;
+                try {
+                    aux.automaticWalkWhenIsNotColliding(new Vector3f(tpf*15,0f,0f));
+                } catch (Exception ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
-        if(!colision(playerB)){
-            playerB.move(0.01f,0,0);
-        }*/
     }
     
    
@@ -148,25 +167,33 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
      //   throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
        
-    @Override
+     @Override
     public void collision(PhysicsCollisionEvent event) {
         
-        /*if(event.getNodeA().getName().equals("ninja1")){
-            playerACollider++;
-            System.out.println("NINJA1");
+        if(event.getNodeA().getName().startsWith("ninja") && event.getNodeB().getName().startsWith("ninja")){
+            
+            Ninja ninja1 = (Ninja)event.getNodeA();
+            Ninja ninja2 = (Ninja)event.getNodeB();
+
+            ninja1.setIsColliding(true);
+            ninja2.setIsColliding(true);
+
+            
+            ninja1.animate("Walk", "Attack3", 0.02f, LoopMode.Loop, 0f);
+            ninja2.animate("Walk", "Attack3", 0.02f, LoopMode.Loop, 0f);
+
             
         }
-        else if(event.getNodeB().getName().equals("ninja2")){
-            playerBCollider++;
-            System.out.println("NINJA2");
-        }*/
+        
+       
         
     }
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
+        
 
-        if(name.equals("Right")){
+      /*  if(name.equals("Right")){
             NinjaKey.move(0.01f,0,0);
             System.out.println("right");
 
@@ -177,7 +204,7 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
          System.out.println("left");
 
 
-        }
+        }*/
        /* else if(name.equals(""))
         {
             
