@@ -34,6 +34,7 @@ import entidades.Ninja;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,6 +63,8 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     private int playerACollider = 0;
     private int playerBCollider = 0;
 
+    private Boolean isRunning = true;
+    
     private ArrayList<Model> ninjaList;
     private int lose = 10;
     
@@ -91,8 +94,8 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
         initBulletAppState();
         createLight(ColorRGBA.Gray);
         createKeys();
-        playerA = createNinja("ninja1", posX+150, posY, posZ,new Vector3f(0,-80f,0) ,this, true);
-        playerB = createNinja("ninja2", posX-150, posY, posZ,new Vector3f(0,80f,0), this, false);
+        playerA = createNinja("ninja1", posX+150, posY, posZ,new Vector3f(0,-80f,0) ,this, true,15);
+        playerB = createNinja("ninja2", posX-150, posY, posZ,new Vector3f(0,80f,0), this, false,15);
         initNinjas();
     }
     
@@ -119,8 +122,8 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
         return classType.equals(Ninja.class);
     }
 
-    private Ninja createNinja(String name, float posX, float posY, float posZ,Vector3f rotation,Main listener, Boolean walkToLeft){
-        Ninja ninja = new Ninja(name, new Vector3f(posX,posY,posZ),rotation, this.bulletAppState, "Models/Ninja/Ninja.mesh.xml", assetManager, walkToLeft);
+    private Ninja createNinja(String name, float posX, float posY, float posZ, Vector3f rotation, Main listener, boolean walkToLeft, int par2){
+        Ninja ninja = new Ninja(name, new Vector3f(posX,posY,posZ),rotation, this.bulletAppState, "Models/Ninja/Ninja.mesh.xml", assetManager, walkToLeft,15);
         rootNode.attachChild(ninja);
         ninjaList.add(ninja);
         return ninja;
@@ -128,15 +131,36 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
     
     @Override
     public void simpleUpdate(float tpf) {
-        for (Model next : ninjaList) {
+        if(isRunning){
+            for (Model next : ninjaList) {
             if (isNinja(next.getClass())) {
                 Ninja aux = (Ninja)next;
                 try {
-                    aux.automaticWalkWhenIsNotColliding(new Vector3f(tpf*15,0f,0f));
+                    if(!isColliding){
+                        aux.automaticWalkWhenIsNotColliding(new Vector3f(tpf*15,0f,0f));
+                    }
+                    else{
+                        //se os ninjas ainda estão vivos
+                        if(aux.getNumLife()>0){
+                            Random random = new Random();
+                            int life = aux.getNumLife()-random.nextInt(3);
+                            aux.setNumLife(life);
+                        }
+                        //ninja morreu
+                        else{
+                            String animName = aux.getName().equals("ninja1") ? "Attack3" : "Attack2";
+                            aux.animate(animName, "Climb", 0.004f, LoopMode.DontLoop, 0.01f);
+                            aux.animate("Climb", "Death1", 0.004f, LoopMode.DontLoop, 0.01f);
+                            isRunning = false;
+                            
+                        }
+                    }
+                    
                 } catch (Exception ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
+        }
         }
     }
     
@@ -148,9 +172,7 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
 
     @Override
     public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-        /*if(colision(playerA)){
-         playerA.animate("Walk", "Attack3", 0.0f, LoopMode.DontLoop, 1f);
-        } */      
+             
     }
    
     
@@ -170,25 +192,31 @@ public class Main extends SimpleApplication implements AnimEventListener, Physic
      @Override
     public void collision(PhysicsCollisionEvent event) {
         
-        if(event.getNodeA().getName().startsWith("ninja") && event.getNodeB().getName().startsWith("ninja")){
+        if(event.getNodeA().getName().startsWith("ninja") && event.getNodeB().getName().startsWith("ninja")) {
             
             Ninja ninja1 = (Ninja)event.getNodeA();
             Ninja ninja2 = (Ninja)event.getNodeB();
-
+            
             ninja1.setIsColliding(true);
             ninja2.setIsColliding(true);
+            
+            ninja1.getRigidBodyControl().setKinematic(true);
+            ninja2.getRigidBodyControl().setKinematic(true);
 
             
-            ninja1.animate("Walk", "Attack3", 0.02f, LoopMode.Loop, 0f);
-            ninja2.animate("Walk", "Attack3", 0.02f, LoopMode.Loop, 0f);
-
+            isColliding = ninja1.isColliding() && ninja2.isColliding();
+            
+            ninja1.animate("Walk", "Attack3", 0.005f, LoopMode.Loop, 0.01f);
+            ninja2.animate("Walk", "Attack2", 0.01f, LoopMode.Loop, 0.04f);
             
         }
         
        
         
     }
-
+   
+    private Boolean isColliding = false;
+    
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         

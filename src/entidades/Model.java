@@ -53,6 +53,9 @@ public class Model extends Node implements AnimEventListener, PhysicsCollisionLi
         return animationControl;
     }
 
+     public RigidBodyControl getRigidBodyControl(){
+         return rigidBodyControl;
+     }
     public float getPosX() {
         return posX;
     }
@@ -131,9 +134,10 @@ public class Model extends Node implements AnimEventListener, PhysicsCollisionLi
         this.nodeToLoadMesh.addControl(boxPhysicsNode);
         bulletAppState.getPhysicsSpace().add(boxPhysicsNode);*/
         
+                //CollisionShape collisionShape = CollisionShapeFactory.createMeshShape(this.nodeToLoadMesh);
         CapsuleCollisionShape shape = new CapsuleCollisionShape(radiusCollision,heightCollision);
-        RigidBodyControl rigidBodyControl = new RigidBodyControl(shape,100);
-        rigidBodyControl.setFriction(0);
+        RigidBodyControl rigidBodyControl = new RigidBodyControl(shape,0);
+        //rigidBodyControl.setFriction(0);
         this.rigidBodyControl = rigidBodyControl;
         this.addControl(rigidBodyControl);
         bulletAppState.getPhysicsSpace().add(rigidBodyControl);  
