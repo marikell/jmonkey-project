@@ -10,6 +10,7 @@ import com.jme3.animation.AnimControl;
 import com.jme3.animation.LoopMode;
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 
@@ -72,6 +73,18 @@ public class Ninja extends Model{
     
     public void startCollider(){
        startCollider(0,70,80f);
+    }
+
+    public AnimChannel getAnimationChannel() {
+        return animationChannel;
+    }
+
+    public AnimControl getAnimationControl() {
+        return animationControl;
+    }
+
+    public RigidBodyControl getRigidBodyControl() {
+        return rigidBodyControl;
     }
    
     

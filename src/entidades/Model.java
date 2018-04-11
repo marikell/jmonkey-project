@@ -39,23 +39,20 @@ public class Model extends Node implements AnimEventListener, PhysicsCollisionLi
     private Boolean isColliding;
     
     private Node nodeToLoadMesh;
-    private RigidBodyControl rigidBodyControl;
+    protected RigidBodyControl rigidBodyControl;
     
-    private AnimControl animationControl;
-    private AnimChannel animationChannel;
+    AnimControl animationControl;
+    AnimChannel animationChannel;
     private BulletAppState bulletAppState;
-
-    public AnimChannel getAnimationChannel() {
-        return animationChannel;
+    
+    public BulletAppState getbulletAppState(){
+        return this.bulletAppState;
     }
     
-      public AnimControl getAnimationControl() {
-        return animationControl;
+    public Node getNodeToLoadMesh(){
+        return this.nodeToLoadMesh;
     }
-
-     public RigidBodyControl getRigidBodyControl(){
-         return rigidBodyControl;
-     }
+    
     public float getPosX() {
         return posX;
     }
